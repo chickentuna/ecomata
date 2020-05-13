@@ -4,17 +4,25 @@ import * as PIXI from 'pixi.js'
 
 const COLOURS = {
   void: 0x0,
-  ocean: 0x00295e
+  ocean: 0x00295e,
+  rock: 0xDCDCDC
 }
 
 const DRAWN = {
   void: noop,
-  ocean: drawHex
+  ocean: drawHex,
+  rock: drawHex
+}
+
+const ANIMALS = {
+  fish: '🐠',
+  shark: '🦈'
 }
 
 function noop () {}
 
 function drawHex (cell, container) {
+  const group = new PIXI.Container()
   const colour = COLOURS[cell.type]
 
   const hexaP = hexToScreen(cell)
@@ -32,8 +40,19 @@ function drawHex (cell, container) {
   ])
   g.endFill()
 
-  g.position.set(hexaP.x, hexaP.y)
-  container.addChild(g)
+  group.addChild(g)
+
+  if (cell.animal) {
+    const emoji = new PIXI.Text(ANIMALS[cell.animal], {
+      fontSize: 24
+    })
+    emoji.scale.set(0.5)
+    emoji.anchor.set(0.5)
+    group.addChild(emoji)
+  }
+
+  group.position.set(hexaP.x, hexaP.y)
+  container.addChild(group)
 }
 
 export class CellDrawer {

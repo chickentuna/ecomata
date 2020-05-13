@@ -123,7 +123,7 @@ export class TooltipHandler {
     const tooltip = this.tooltip
     const container = this.container
 
-    if (tooltip) {
+    if (this.mouseData) {
       var pos = this.mouseData.getLocalPosition(container)
       tooltip.x = pos.x
       tooltip.y = pos.y
@@ -137,7 +137,9 @@ export class TooltipHandler {
       if (cell != null) {
         const params = []
         for (const key in cell) {
-          params.push(`${key}: ${cell[key]}`)
+          if (cell[key] != null) {
+            params.push(`${key}: ${cell[key]}`)
+          }
         }
         tooltipBlocks.push(params.join('\n'))
       } else if (hexCoords.y >= 0 && hexCoords.x >= 0 && hexCoords.x < this.world.width && hexCoords.y < this.world.height) {

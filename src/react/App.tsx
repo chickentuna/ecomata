@@ -6,7 +6,7 @@ import { HEXAGON_RADIUS, hexToScreen, HEXAGON_HEIGHT, HEXAGON_X_SEP } from './he
 import { TooltipHandler } from './tooltip'
 import { CellDrawer } from './CellDrawer'
 
-const MS_PER_TICK = 100
+const MS_PER_TICK = 1
 
 class App extends Component {
   app: PIXI.Application
@@ -69,8 +69,14 @@ class App extends Component {
     this.worldContainer.addChild(g)
   }
 
-  animate (delta) {
-    this.time += delta// TODO: understand this
+  animate () {
+    const delta = this.app.ticker.deltaMS
+    this.time += delta
+    if (delta >= 100) {
+      console.log('too slow!')
+
+      return
+    }
     if (this.time >= this.lastWorldTick + MS_PER_TICK) {
       this.world.tick()
       this.drawWorld()
