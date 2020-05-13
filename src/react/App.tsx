@@ -4,11 +4,18 @@ import * as PIXI from 'pixi.js'
 import { World } from './World'
 import { HEXAGON_RADIUS, hexToScreen, HEXAGON_HEIGHT, HEXAGON_X_SEP } from './hex'
 import { TooltipHandler } from './tooltip'
+import { CellDrawer } from './CellDrawer'
+
+const MS_PER_TICK = 100
 
 class App extends Component {
   app: PIXI.Application
   world: World
   container: PIXI.Container
+  time: number
+  lastWorldTick: number
+  worldContainer: PIXI.Container
+  tooltip: TooltipHandler
 
   componentDidMount () {
     this.app = new PIXI.Application({
@@ -18,16 +25,19 @@ class App extends Component {
     })
     document.querySelector('#canvas-zone').appendChild(this.app.view)
 
-    this.app.ticker.add(this.animate)
+    this.app.ticker.add(this.animate.bind(this))
 
     this.initWorld()
     this.initUI()
     this.drawWorld()
+    this.time = 0
+    this.lastWorldTick = 0
   }
 
   initUI () {
     const tooltipHandler = new TooltipHandler(this.container, this.world)
     tooltipHandler.init()
+    this.tooltip = tooltipHandler
   }
 
   initWorld () {
@@ -35,47 +45,38 @@ class App extends Component {
     this.container.sortableChildren = true
     this.app.stage.addChild(this.container)
     this.container.position.set(30, 30)
+    this.container.scale.set(2)
 
     this.world = new World()
+    this.world.setup()
+    this.worldContainer = new PIXI.Container()
+    this.container.addChild(this.worldContainer)
   }
 
   drawWorld () {
     const world = this.world
-    const app = this.app
 
-    for (let y = 0; y < world.height; ++y) {
-      for (let x = 0; x < world.width; ++x) {
-        var hexaP = hexToScreen({
-          x, y
-        })
+    this.worldContainer.removeChildren()
 
-        const g = new PIXI.Graphics()
-        g.beginFill(0x00FF00, 1)
-        g.lineStyle(1, 0x0, 1, 0)
-        g.drawPolygon([
-          -HEXAGON_RADIUS, 0,
-          -HEXAGON_RADIUS / 2, HEXAGON_HEIGHT / 2,
-          HEXAGON_RADIUS / 2, HEXAGON_HEIGHT / 2,
-          HEXAGON_RADIUS, 0,
-          HEXAGON_RADIUS / 2, -HEXAGON_HEIGHT / 2,
-          -HEXAGON_RADIUS / 2, -HEXAGON_HEIGHT / 2
-        ])
-        g.endFill()
-        console.log(hexaP)
-        g.position.set(hexaP.x, hexaP.y)
-        this.container.addChild(g)
-      }
+    for (const cell of world.cells) {
+      CellDrawer.draw(cell, this.worldContainer)
     }
+
     const g = new PIXI.Graphics()
     g.lineStyle(2, 0xFF0000, 1, 1)
     g.drawRect(0, 0, world.width * HEXAGON_X_SEP + HEXAGON_RADIUS / 2, (world.height + 0.5) * HEXAGON_HEIGHT)
     g.position.set(-HEXAGON_RADIUS, -HEXAGON_HEIGHT / 2)
-    this.container.addChild(g)
-    this.container.scale.set(2)
+    this.worldContainer.addChild(g)
   }
 
   animate (delta) {
-
+    this.time += delta// TODO: understand this
+    if (this.time >= this.lastWorldTick + MS_PER_TICK) {
+      this.world.tick()
+      this.drawWorld()
+      this.lastWorldTick = this.time
+      this.tooltip.refresh()
+    }
   }
 
   render () {

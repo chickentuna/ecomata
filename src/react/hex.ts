@@ -23,3 +23,16 @@ export function hexToScreen (p:Point): Point {
   const y = HEXAGON_HEIGHT * (p.y + 0.5 * (p.x & 1))
   return { x, y }
 }
+
+const oddqDirections = [
+  [[+1, 0], [+1, -1], [0, -1],
+    [-1, -1], [-1, 0], [0, +1]],
+  [[+1, +1], [+1, 0], [0, -1],
+    [-1, 0], [-1, +1], [0, +1]]
+]
+
+export function oddqOffsetNeighbor (x, y, direction) {
+  var parity = x & 1
+  var dir = oddqDirections[parity][direction]
+  return { x: x + dir[0], y: y + dir[1] }
+}

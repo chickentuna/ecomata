@@ -1,20 +1,13 @@
-interface Params {
+import { oddqOffsetNeighbor } from './hex'
+import { CellTicker } from './CellTicker'
+
+export type Cell = {
+  x:number
+  y:number
   [key: string]: any
 }
 
-class Cell {
-  params: Params
-  x:number
-  y:number
-
-  constructor (x:number, y:number) {
-    this.x = x
-    this.y = y
-    this.params = {}
-  }
-}
-
-class World {
+export class World {
   width: number
   height: number
   cells: Cell[]
@@ -26,10 +19,50 @@ class World {
 
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const cell = new Cell(x, y)
+        const cell = { x, y, type: 'void' }
+        this.cells.push(cell)
       }
     }
   }
-}
 
-export { Cell, World }
+  get (x:number, y:number):Cell {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+      return null
+    }
+    return this.cells[y * this.height + x]
+  }
+
+  setup () {
+    for (const cell of this.cells) {
+      if ((cell.y === 0 && cell.x === 0) || (cell.y === this.height - 1 && cell.x === this.width - 1)) {
+        continue
+      }
+      cell.type = 'ocean'
+      cell.bacteria = 0
+      cell.humiditySource = true
+    }
+  }
+
+  getNeighbours (cell) {
+    const result = []
+    for (let d = 0; d < 6; ++d) {
+      const coord = oddqOffsetNeighbor(cell.x, cell.y, d)
+      const neigh = this.get(coord.x, coord.y)
+      if (neigh != null) {
+        result.push(neigh)
+      }
+    }
+    return result
+  }
+
+  tick () {
+    const newCells = []
+    for (let idx = 0; idx < this.cells.length; ++idx) {
+      const cell = this.cells[idx]
+      const neighours = this.getNeighbours(cell)
+      const newCell = CellTicker.tick(cell, neighours, this)
+      newCells.push(newCell)
+    }
+    this.cells = newCells
+  }
+}
