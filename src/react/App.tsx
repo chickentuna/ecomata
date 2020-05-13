@@ -2,35 +2,8 @@ import React, { Component } from 'react'
 import './App.scss'
 import * as PIXI from 'pixi.js'
 import { World } from './World'
-
-interface Point {
-  x:number,
-  y:number
-}
-
-var HEXAGON_WIDTH = 20
-var HEXAGON_RADIUS = HEXAGON_WIDTH / 2
-var HEXAGON_HEIGHT = HEXAGON_RADIUS * Math.sqrt(3)
-var HEXAGON_X_SEP = HEXAGON_RADIUS * 3 / 2
-
-function screenToHex (p:Point): Point {
-  var xIdx = Math.round(p.x / (HEXAGON_RADIUS * (3 / 2)))
-  const x = xIdx * (HEXAGON_RADIUS * (3 / 2))
-  let y
-  if (xIdx % 2) {
-    y = Math.floor(p.y / (HEXAGON_HEIGHT)) * HEXAGON_HEIGHT + HEXAGON_HEIGHT / 2
-  } else {
-    y = Math.round(p.y / (HEXAGON_HEIGHT)) * HEXAGON_HEIGHT
-  }
-
-  return { x, y }
-}
-
-function hexToScreen (p:Point): Point {
-  var x = HEXAGON_RADIUS * 3 / 2 * p.x
-  var y = HEXAGON_HEIGHT * (p.y + 0.5 * (p.x & 1))
-  return { x, y }
-}
+import { HEXAGON_RADIUS, hexToScreen, HEXAGON_HEIGHT, HEXAGON_X_SEP } from './hex'
+import { TooltipHandler } from './tooltip'
 
 class App extends Component {
   app: PIXI.Application
@@ -48,15 +21,22 @@ class App extends Component {
     this.app.ticker.add(this.animate)
 
     this.initWorld()
+    this.initUI()
+    this.drawWorld()
+  }
+
+  initUI () {
+    const tooltipHandler = new TooltipHandler(this.container, this.world)
+    tooltipHandler.init()
   }
 
   initWorld () {
     this.container = new PIXI.Container()
+    this.container.sortableChildren = true
     this.app.stage.addChild(this.container)
     this.container.position.set(30, 30)
 
     this.world = new World()
-    this.drawWorld()
   }
 
   drawWorld () {
