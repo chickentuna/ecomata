@@ -8,7 +8,14 @@ import { CellDrawer } from './CellDrawer'
 
 const MS_PER_TICK = 1
 
-class App extends Component {
+interface State {
+  paused: boolean
+}
+interface Props {
+
+}
+
+class App extends Component<Props, State> {
   app: PIXI.Application
   world: World
   container: PIXI.Container
@@ -16,6 +23,14 @@ class App extends Component {
   lastWorldTick: number
   worldContainer: PIXI.Container
   tooltip: TooltipHandler
+  state: State
+
+  constructor (props: Props) {
+    super(props)
+    this.state = {
+      paused: false
+    }
+  }
 
   componentDidMount () {
     this.app = new PIXI.Application({
@@ -51,6 +66,15 @@ class App extends Component {
     this.world.setup()
     this.worldContainer = new PIXI.Container()
     this.container.addChild(this.worldContainer)
+
+    setInterval(() => {
+      if (!this.state.paused) {
+        this.world.tick()
+        this.drawWorld()
+        this.lastWorldTick = this.time
+        this.tooltip.refresh()
+      }
+    }, MS_PER_TICK)
   }
 
   drawWorld () {
@@ -74,15 +98,13 @@ class App extends Component {
     this.time += delta
     if (delta >= 100) {
       console.log('too slow!')
+    }
+  }
 
-      return
-    }
-    if (this.time >= this.lastWorldTick + MS_PER_TICK) {
-      this.world.tick()
-      this.drawWorld()
-      this.lastWorldTick = this.time
-      this.tooltip.refresh()
-    }
+  handlePause () {
+    this.setState({
+      paused: !this.state.paused
+    })
   }
 
   render () {
@@ -94,6 +116,9 @@ class App extends Component {
         <div className='App-content'>
 
           <div id='canvas-zone' />
+          <button onClick={() => this.handlePause()} className='bump-button'>
+            Play/Pause
+          </button>
 
         </div>
       </div>

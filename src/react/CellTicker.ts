@@ -38,6 +38,7 @@ export class CellTicker {
 
       if (cell.animal === 'fish' && cell.plantlife < 0.1) {
         copy.animal = null
+        increment(copy, 'bones', 0.05)
       }
 
       if (cell.animal === 'fish' && cell.plantlife >= 0.1) {
