@@ -21,9 +21,12 @@ export class World {
   constructor () {
     this.width = 10
     this.height = 10
-    this.cells = []
     this.neighbourMap = {}
+    this.initGrid()
+  }
 
+  initGrid () {
+    this.cells = []
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
         const cell = { x, y, type: 'void' }
@@ -44,6 +47,7 @@ export class World {
   }
 
   setup () {
+    this.initGrid()
     for (const cell of this.cells) {
       if ((cell.y === 0 && cell.x === 0) || (cell.y === this.height - 1 && cell.x === this.width - 1)) {
         continue

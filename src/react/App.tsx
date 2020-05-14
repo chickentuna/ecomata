@@ -45,8 +45,6 @@ class App extends Component<Props, State> {
     this.initWorld()
     this.initUI()
     this.drawWorld()
-    this.time = 0
-    this.lastWorldTick = 0
   }
 
   initUI () {
@@ -71,7 +69,6 @@ class App extends Component<Props, State> {
       if (!this.state.paused) {
         this.world.tick()
         this.drawWorld()
-        this.lastWorldTick = this.time
         this.tooltip.refresh()
       }
     }, MS_PER_TICK)
@@ -107,6 +104,14 @@ class App extends Component<Props, State> {
     })
   }
 
+  handleReset () {
+    this.world.setup()
+    this.drawWorld()
+    this.setState({
+      paused: true
+    })
+  }
+
   render () {
     return (
       <div className='App'>
@@ -116,9 +121,14 @@ class App extends Component<Props, State> {
         <div className='App-content'>
 
           <div id='canvas-zone' />
-          <button onClick={() => this.handlePause()} className='bump-button'>
-            Play/Pause
-          </button>
+          <div id='controls'>
+            <button onClick={() => this.handlePause()}>
+              {this.state.paused ? 'Play' : 'Pause'}
+            </button>
+            <button onClick={() => this.handleReset()}>
+              Reset
+            </button>
+          </div>
 
         </div>
       </div>
