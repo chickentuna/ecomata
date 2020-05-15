@@ -6,7 +6,7 @@ import { HEXAGON_RADIUS, hexToScreen, HEXAGON_HEIGHT, HEXAGON_X_SEP } from './he
 import { TooltipHandler } from './tooltip'
 import { CellDrawer } from './CellDrawer'
 
-const MS_PER_TICK = 1
+const MS_PER_TICK = 100
 
 interface State {
   paused: boolean

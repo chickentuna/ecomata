@@ -1,21 +1,12 @@
 import { Cell, World } from './World'
 import { hexToScreen, HEXAGON_RADIUS, HEXAGON_HEIGHT } from './hex'
 import * as PIXI from 'pixi.js'
+import { choice } from './utils'
 
-function random (a, b) {
-  return +(a + Math.random() * (b - a)).toFixed(3)
-}
+const NO_RANDOM = true
 
 function count (neighbours: Cell[], predicate): number {
   return neighbours.filter(predicate).length
-}
-
-function increment (cell:Cell, key, amount:number) {
-  cell[key] = +Math.min(1, (cell[key] || 0) + amount).toFixed(3)
-}
-
-function decrement (cell:Cell, key:string, amount:number) {
-  cell[key] = +Math.max(0, (cell[key] || 0) - amount).toFixed(3)
 }
 
 var currentNeighbours = []
@@ -24,50 +15,89 @@ function countAnimals (name) {
   return count(currentNeighbours, c => c.animal === name)
 }
 
+// TODO: a property mapper object to add qualities to other cells with a given property.
+// E.G. I add the 'wet' property to ocean and lake. Or 'herbivore' to rabbit and chicken.
+// these properties do not change, they are tied to the mapped property.
+// Example below.
+const BONE_MASS = {
+  fish: 0.05,
+  shark: 0.1
+}
+// Now i can react to presence of bones in an animal (weird example)
+
+interface Changes {
+  [key:string]:number|string|null
+}
+interface TransformOpts {
+  replace?: boolean
+}
+
+function apply (cell, transform:(changes: Changes, opts?: TransformOpts) => void) {
+  if (cell.type === 'ocean') {
+    transform({ plantlife: 0.1 })
+
+    if (cell.animal == null && cell.plantlife > 0.5) {
+      transform({ animal: 'fish' })
+    }
+
+    if (cell.animal === 'fish' && cell.plantlife < 0.1) {
+      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
+    }
+
+    if (cell.animal === 'fish' && cell.plantlife >= 0.1) {
+      transform({ plantlife: -0.2 })
+    }
+
+    if (cell.animal == null && countAnimals('fish') > 3) {
+      transform({ animal: 'shark' })
+    }
+
+    if (cell.animal === 'fish' &&
+      countAnimals('shark') > 0 &&
+      countAnimals('fish') === 0
+    ) {
+      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
+    }
+
+    if (cell.animal === 'shark' && countAnimals('fish') === 0) {
+      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
+    }
+
+    if (cell.bones === 1) {
+      transform({ type: 'rock' }, { replace: true })
+    }
+  }
+}
+
 export class CellTicker {
   static tick (cell: Cell, neighbours: Cell[], world: World):Cell {
     currentNeighbours = neighbours
+    var transforms = []
+    const accumulator = (changes, opts) => {
+      transforms.push({ changes, ...opts })
+    }
+    apply(cell, accumulator)
 
-    if (cell.type === 'ocean') {
+    if (transforms.length > 0) {
+      // pick a transform
+      const transform = choice(transforms)
+      // debugger
+      if (transform.replace) {
+        return {
+          ...transform.changes,
+          x: cell.x,
+          y: cell.y
+        }
+      }
       const copy = { ...cell }
-      increment(copy, 'plantlife', random(0, 0.1))
-
-      if (cell.animal == null && cell.plantlife > 0.5) {
-        copy.animal = 'fish'
+      for (const key in transform.changes) {
+        const value = transform.changes[key]
+        if (typeof value === 'number') {
+          copy[key] = +Math.max(0, Math.min(1, (cell[key] || 0) + value)).toFixed(3)
+        } else {
+          copy[key] = value
+        }
       }
-
-      if (cell.animal === 'fish' && cell.plantlife < 0.1) {
-        copy.animal = null
-        increment(copy, 'bones', 0.05)
-      }
-
-      if (cell.animal === 'fish' && cell.plantlife >= 0.1) {
-        decrement(copy, 'plantlife', random(0.01, 0.2))
-      }
-
-      if (cell.animal == null && countAnimals('fish') > 3) {
-        copy.animal = 'shark'
-      }
-
-      if (
-        cell.animal === 'fish' &&
-        countAnimals('shark') > 0 &&
-        countAnimals('fish') === 0
-      ) {
-        copy.animal = null
-        increment(copy, 'bones', 0.05)
-      }
-
-      if (cell.animal === 'shark' && countAnimals('fish') === 0) {
-        copy.animal = null
-        increment(copy, 'bones', 0.1)
-      }
-
-      if (cell.bones === 1) {
-        copy.type = 'rock'
-        copy.animal = null
-      }
-
       return copy
     }
 
