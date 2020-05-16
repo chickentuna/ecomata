@@ -5,7 +5,8 @@ import { HEXAGON_X_SEP, HEXAGON_RADIUS, HEXAGON_HEIGHT, hexToScreen } from './he
 interface Hex {
   group: PIXI.Container,
   ground: PIXI.Graphics,
-  text: PIXI.Text
+  text: PIXI.Text,
+  subText: PIXI.Text
 }
 
 const COLOURS:{
@@ -148,6 +149,9 @@ export class WorldDrawer {
       const hex: Hex = {
         group: new PIXI.Container(),
         ground: new PIXI.Graphics(),
+        subText: new PIXI.Text('', {
+          fontSize: 20
+        }),
         text: new PIXI.Text('', {
           fontSize: 24
         })
@@ -155,6 +159,8 @@ export class WorldDrawer {
 
       hex.text.scale.set(0.5)
       hex.text.anchor.set(0.5)
+      hex.subText.scale.set(0.4)
+      hex.subText.anchor.set(0.5, 0)
 
       hex.group.position.set(hexaP.x, hexaP.y)
 
@@ -198,6 +204,13 @@ export class WorldDrawer {
       hex.text.text = emoji
     } else {
       hex.text.text = ''
+    }
+
+    if (cell.plant) {
+      const emoji = PLANTS[cell.animal]
+      hex.subText.text = emoji
+    } else {
+      hex.subText.text = ''
     }
   }
 

@@ -90,6 +90,37 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
     if (cell.humidity <= HUMIDITY_DISTANCE - 2) {
       transform({ type: 'earth' }, { replace: true })
     }
+    if (cell.animal == null && countParam('type', 'ocean') >= 1) {
+      transform({ animal: 'crab' })
+    }
+    if (cell.animal === 'crab' && countParam('type', 'ocean') === 0) {
+      transform({ animal: null, fertilizer: 0.1 })
+    }
+    if (cell.animal === 'crab' && countAnimals('bird') * 2 >= countAnimals('crab')) {
+      transform({ animal: null, fertilizer: 0.1 })
+    }
+    if (cell.fertilizer > 0.6) {
+      transform({ plant: 'palm tree' })
+    }
+  }
+  if (cell.type === 'earth') {
+    if (cell.animal == null && countAnimals('bird') === 0) {
+      transform({ animal: 'bug' })
+    }
+    if (cell.animal === 'bug' && countAnimals('bird') > 1) {
+      transform({ animal: null, fertilizer: 0.1 })
+    }
+    if (cell.fertilizer > 0.6) {
+      transform({ plant: 'tree' })
+    }
+  }
+  if (cell.type === 'earth' || cell.type === 'rock') {
+    if (cell.animal == null && (countAnimals('crab') + countAnimals('bug')) >= 3) {
+      transform({ animal: 'bird' })
+    }
+    if (cell.animal === 'bird' && (countAnimals('crab') + countAnimals('bug')) === 0) {
+      transform({ animal: null, fertilizer: 0.2 })
+    }
   }
 }
 
