@@ -2,6 +2,8 @@ import { Cell, World } from './World'
 import { choice } from './utils'
 import { BONE_MASS, HUMIDITY_SOURCE } from './properties'
 
+const HUMIDITY_DISTANCE = 4
+
 var currentNeighbours:Cell[] = []
 
 function count (predicate: (c:Cell) => boolean): number {
@@ -63,10 +65,7 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
       transform({ type: 'rock' }, { replace: true })
     }
 
-    if (countParam('type', 'rock') >= 4) {
-      transform({ type: 'sand' }, { replace: true })
-    }
-    if (countParam('type', 'earth') >= 1) {
+    if (countParam('type', 'rock') >= 1) {
       transform({ type: 'sand' }, { replace: true })
     }
   }
@@ -75,22 +74,16 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
     const humdityScore = Math.max(...currentNeighbours.map(
       c => {
         if (HUMIDITY_SOURCE.includes(c.type)) {
-          return 1
+          return HUMIDITY_DISTANCE
         }
         return c.humidity || 0
       }
     ))
-    transform({ humidity: Math.max(0, humdityScore - 0.2) }, { set: true })
+    transform({ humidity: Math.max(0, humdityScore - 1) }, { set: true })
   }
 
-  if (cell.type === 'rock') {
-    console.log('r')
-    if (countParam('type', 'sand') >= 3) {
-      transform({ type: 'earth' }, { replace: true })
-    }
-  }
   if (cell.type === 'sand') {
-    if (!currentNeighbours.some(c => c.type === 'rock')) {
+    if (cell.humidity <= HUMIDITY_DISTANCE - 2) {
       transform({ type: 'earth' }, { replace: true })
     }
   }
