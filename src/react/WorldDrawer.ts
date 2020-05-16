@@ -164,7 +164,7 @@ export class WorldDrawer {
 
       hex.group.position.set(hexaP.x, hexaP.y)
 
-      hex.group.addChild(hex.ground, hex.text)
+      hex.group.addChild(hex.ground, hex.subText, hex.text)
       container.addChild(hex.group)
 
       this.hexes.push(hex)
@@ -207,7 +207,7 @@ export class WorldDrawer {
     }
 
     if (cell.plant) {
-      const emoji = PLANTS[cell.animal]
+      const emoji = PLANTS[cell.plant]
       hex.subText.text = emoji
     } else {
       hex.subText.text = ''
