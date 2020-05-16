@@ -8,10 +8,6 @@ export type Cell = {
   [key: string]: any
 }
 
-function key (point:Point) {
-  return `${point.x} ${point.y}`
-}
-
 export class World {
   width: number
   height: number
@@ -27,15 +23,16 @@ export class World {
 
   initGrid () {
     this.cells = []
+    let index = 0
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const cell = { x, y, type: 'void' }
+        const cell = { x, y, index: index++, type: 'void' }
         this.cells.push(cell)
       }
     }
 
     for (const cell of this.cells) {
-      this.neighbourMap[key(cell)] = this.getNeighbourCoords(cell)
+      this.neighbourMap[cell.index] = this.getNeighbourCoords(cell)
     }
   }
 
@@ -56,8 +53,6 @@ export class World {
         cell.animal = 'fish'
       }
       cell.type = 'ocean'
-      cell.plantlife = 0
-      cell.humiditySource = true
     }
   }
 
@@ -74,13 +69,22 @@ export class World {
   }
 
   getNeighbours (cell: Cell):Cell[] {
-    return this.neighbourMap[key(cell)].map(point => this.get(point.x, point.y))
+    const res = []
+    for (const point of this.neighbourMap[cell.index]) {
+      const cell = this.get(point.x, point.y)
+      if (cell != null && cell.type !== 'void') {
+        res.push(cell)
+      }
+    }
+    return res
   }
 
   tick () {
     const newCells = []
-    for (let idx = 0; idx < this.cells.length; ++idx) {
-      const cell = this.cells[idx]
+    for (const cell of this.cells) {
+      if (cell.type === 'void') {
+        continue
+      }
       const neighours = this.getNeighbours(cell)
       const newCell = CellTicker.tick(cell, neighours, this)
       newCells.push(newCell)

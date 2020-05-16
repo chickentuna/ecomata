@@ -1,42 +1,38 @@
 import { Cell, World } from './World'
-import { hexToScreen, HEXAGON_RADIUS, HEXAGON_HEIGHT } from './hex'
-import * as PIXI from 'pixi.js'
 import { choice } from './utils'
+import { BONE_MASS, HUMIDITY_SOURCE } from './properties'
 
-const NO_RANDOM = true
+var currentNeighbours:Cell[] = []
 
-function count (neighbours: Cell[], predicate): number {
-  return neighbours.filter(predicate).length
+function count (predicate: (c:Cell) => boolean): number {
+  return currentNeighbours.filter(predicate).length
 }
 
-var currentNeighbours = []
-
-function countAnimals (name) {
-  return count(currentNeighbours, c => c.animal === name)
+function countAnimals (name:string) {
+  return count(c => c.animal === name)
 }
 
-// TODO: a property mapper object to add qualities to other cells with a given property.
-// E.G. I add the 'wet' property to ocean and lake. Or 'herbivore' to rabbit and chicken.
-// these properties do not change, they are tied to the mapped property.
-// Example below.
-const BONE_MASS = {
-  fish: 0.05,
-  shark: 0.1
+function countParam (key:string, name:string) {
+  return count(c => c[key] === name)
 }
-// Now i can react to presence of bones in an animal (weird example)
 
 interface Changes {
   [key:string]:number|string|null
 }
 interface TransformOpts {
-  replace?: boolean
+  replace?: boolean,
+  set?: boolean
+}
+interface Transform {
+  changes: Changes,
+  opts?: TransformOpts
 }
 
-function apply (cell, transform:(changes: Changes, opts?: TransformOpts) => void) {
+function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) => void) {
   if (cell.type === 'ocean') {
     transform({ plantlife: 0.1 })
 
-    if (cell.animal == null && cell.plantlife > 0.5) {
+    if (cell.animal == null && cell.plantlife > 0.5 && count(c => c.type !== 'ocean') <= 1) {
       transform({ animal: 'fish' })
     }
 
@@ -66,34 +62,66 @@ function apply (cell, transform:(changes: Changes, opts?: TransformOpts) => void
     if (cell.bones === 1) {
       transform({ type: 'rock' }, { replace: true })
     }
+
+    if (countParam('type', 'rock') >= 4) {
+      transform({ type: 'sand' }, { replace: true })
+    }
+    if (countParam('type', 'earth') >= 1) {
+      transform({ type: 'sand' }, { replace: true })
+    }
+  }
+
+  if (!HUMIDITY_SOURCE.includes(cell.type)) {
+    const humdityScore = Math.max(...currentNeighbours.map(
+      c => {
+        if (HUMIDITY_SOURCE.includes(c.type)) {
+          return 1
+        }
+        return c.humidity || 0
+      }
+    ))
+    transform({ humidity: Math.max(0, humdityScore - 0.2) }, { set: true })
+  }
+
+  if (cell.type === 'rock') {
+    console.log('r')
+    if (countParam('type', 'sand') >= 3) {
+      transform({ type: 'earth' }, { replace: true })
+    }
+  }
+  if (cell.type === 'sand') {
+    if (!currentNeighbours.some(c => c.type === 'rock')) {
+      transform({ type: 'earth' }, { replace: true })
+    }
   }
 }
 
 export class CellTicker {
   static tick (cell: Cell, neighbours: Cell[], world: World):Cell {
     currentNeighbours = neighbours
-    var transforms = []
-    const accumulator = (changes, opts) => {
-      transforms.push({ changes, ...opts })
+    var transforms:Transform[] = []
+    const accumulator = (changes:Changes, opts:TransformOpts) => {
+      transforms.push({ changes, opts })
     }
     apply(cell, accumulator)
 
     if (transforms.length > 0) {
       // pick a transform
       const transform = choice(transforms)
-      // debugger
-      if (transform.replace) {
+
+      if (transform.opts?.replace) {
         return {
           ...transform.changes,
           x: cell.x,
-          y: cell.y
+          y: cell.y,
+          index: cell.index
         }
       }
       const copy = { ...cell }
       for (const key in transform.changes) {
         const value = transform.changes[key]
-        if (typeof value === 'number') {
-          copy[key] = +Math.max(0, Math.min(1, (cell[key] || 0) + value)).toFixed(3)
+        if (typeof value === 'number' && !transform.opts?.set) {
+          copy[key] = Math.max(0, Math.min(1, (cell[key] || 0) + value))
         } else {
           copy[key] = value
         }

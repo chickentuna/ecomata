@@ -2,14 +2,14 @@ import React, { Component } from 'react'
 import './App.scss'
 import * as PIXI from 'pixi.js'
 import { World } from './World'
-import { HEXAGON_RADIUS, hexToScreen, HEXAGON_HEIGHT, HEXAGON_X_SEP } from './hex'
 import { TooltipHandler } from './tooltip'
-import { CellDrawer } from './CellDrawer'
+import { WorldDrawer } from './WorldDrawer'
 
-const MS_PER_TICK = 100
+const DEFAULT_MS_PER_TICK = 100
 
 interface State {
-  paused: boolean
+  paused: boolean,
+  msPerTick: number
 }
 interface Props {
 
@@ -21,14 +21,15 @@ class App extends Component<Props, State> {
   container: PIXI.Container
   time: number
   lastWorldTick: number
-  worldContainer: PIXI.Container
+  worldDrawer: WorldDrawer
   tooltip: TooltipHandler
   state: State
 
   constructor (props: Props) {
     super(props)
     this.state = {
-      paused: false
+      paused: true,
+      msPerTick: DEFAULT_MS_PER_TICK
     }
   }
 
@@ -44,7 +45,8 @@ class App extends Component<Props, State> {
 
     this.initWorld()
     this.initUI()
-    this.drawWorld()
+    this.worldDrawer.draw()
+    this.launchTicker()
   }
 
   initUI () {
@@ -62,32 +64,20 @@ class App extends Component<Props, State> {
 
     this.world = new World()
     this.world.setup()
-    this.worldContainer = new PIXI.Container()
-    this.container.addChild(this.worldContainer)
 
-    setInterval(() => {
-      if (!this.state.paused) {
-        this.world.tick()
-        this.drawWorld()
-        this.tooltip.refresh()
-      }
-    }, MS_PER_TICK)
+    this.worldDrawer = new WorldDrawer()
+    const worldContainer = this.worldDrawer.init(this.world)
+    this.container.addChild(worldContainer)
   }
 
-  drawWorld () {
-    const world = this.world
-
-    this.worldContainer.removeChildren()
-
-    for (const cell of world.cells) {
-      CellDrawer.draw(cell, this.worldContainer)
-    }
-
-    const g = new PIXI.Graphics()
-    g.lineStyle(2, 0xFF0000, 1, 1)
-    g.drawRect(0, 0, world.width * HEXAGON_X_SEP + HEXAGON_RADIUS / 2, (world.height + 0.5) * HEXAGON_HEIGHT)
-    g.position.set(-HEXAGON_RADIUS, -HEXAGON_HEIGHT / 2)
-    this.worldContainer.addChild(g)
+  launchTicker () {
+    setTimeout(() => {
+      if (!this.state.paused) {
+        this.world.tick()
+        this.worldDrawer.draw()
+      }
+      this.launchTicker()
+    }, this.state.msPerTick)
   }
 
   animate () {
@@ -106,10 +96,14 @@ class App extends Component<Props, State> {
 
   handleReset () {
     this.world.setup()
-    this.drawWorld()
+    this.worldDrawer.draw()
     this.setState({
       paused: true
     })
+  }
+
+  handleMsChange (value:string) {
+    this.setState({ msPerTick: +value })
   }
 
   render () {
@@ -128,6 +122,9 @@ class App extends Component<Props, State> {
             <button onClick={() => this.handleReset()}>
               Reset
             </button>
+            <label>ms per tick:
+              <input type='number' value={this.state.msPerTick} step='10' onChange={(ev) => this.handleMsChange(ev.target.value)} />
+            </label>
           </div>
 
         </div>

@@ -2,57 +2,7 @@ import * as PIXI from 'pixi.js'
 import { World } from './World'
 import { screenToHex } from './hex'
 
-function getMouseMoveFunc (tooltip: PIXI.Container, container: PIXI.Container, handler: TooltipHandler) {
-  return function (ev) {
-    if (tooltip) {
-      var pos = ev.data.getLocalPosition(container)
-      tooltip.x = pos.x
-      tooltip.y = pos.y
-
-      const hexCoords = screenToHex(pos)
-
-      const cell = handler.world.get(hexCoords.x, hexCoords.y)
-
-      const tooltipBlocks = []
-
-      if (cell != null) {
-        const params = []
-        for (const key in cell) {
-          params.push(`${key}: ${cell[key]}`)
-        }
-        tooltipBlocks.push(params.join('\n'))
-      } else if (hexCoords.y >= 0 && hexCoords.x >= 0 && hexCoords.x < handler.world.width && hexCoords.y < handler.world.height) {
-        const x = hexCoords.x
-        const y = hexCoords.y
-
-        const tooltipBlock = 'x: ' + x + '\ny: ' + y
-        tooltipBlocks.push(tooltipBlock)
-      }
-
-      tooltip.visible = tooltipBlocks.length > 0
-      if (tooltip.visible) {
-        handler.label.text = tooltipBlocks.join('\n──────────\n')
-      }
-
-      handler.background.width = handler.label.width + 20
-      handler.background.height = handler.label.height + 20
-
-      tooltip.pivot.x = -30
-      tooltip.pivot.y = -50
-
-      if (tooltip.y - tooltip.pivot.y + tooltip.height > container.width) {
-        tooltip.pivot.y = 10 + tooltip.height
-        tooltip.y -= tooltip.y - tooltip.pivot.y + tooltip.height - container.height
-      }
-
-      if (tooltip.x - tooltip.pivot.x + tooltip.width > container.width) {
-        tooltip.pivot.x = tooltip.width
-      }
-    }
-  }
-};
-
-function generateText (text, size, color, align): PIXI.Text {
+function generateText (text:string, size:number, color:number|string, align:string): PIXI.Text {
   var textEl = new PIXI.Text(text, {
     fontSize: Math.round(size / 1.2) + 'px',
     fontFamily: 'Lato',
@@ -103,7 +53,7 @@ export class TooltipHandler {
   world: World
   mouseData: PIXI.interaction.InteractionData
 
-  constructor (container, world) {
+  constructor (container:PIXI.Container, world:World) {
     this.container = container
     this.world = world
   }

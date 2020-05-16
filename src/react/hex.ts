@@ -31,7 +31,7 @@ const oddqDirections = [
     [-1, 0], [-1, +1], [0, +1]]
 ]
 
-export function oddqOffsetNeighbor (x, y, direction) {
+export function oddqOffsetNeighbor (x:number, y:number, direction:number) {
   var parity = x & 1
   var dir = oddqDirections[parity][direction]
   return { x: x + dir[0], y: y + dir[1] }
