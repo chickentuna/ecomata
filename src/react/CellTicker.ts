@@ -18,6 +18,10 @@ function countParam (key:string, name:string) {
   return count(c => c[key] === name)
 }
 
+function surroundedBy (key:string, name:string) {
+  return currentNeighbours.every(c => c[key] === name)
+}
+
 interface Changes {
   [key:string]:number|string|null
 }
@@ -39,14 +43,14 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
     }
 
     if (cell.animal === 'fish' && cell.plantlife < 0.1) {
-      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
+      transform({ animal: null })
     }
 
     if (cell.animal === 'fish' && cell.plantlife >= 0.1) {
       transform({ plantlife: -0.2 })
     }
 
-    if (cell.animal == null && countAnimals('fish') > 3) {
+    if (cell.animal == null && countAnimals('fish') > 3 && surroundedBy('type', 'ocean')) {
       transform({ animal: 'shark' })
     }
 
