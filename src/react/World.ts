@@ -12,7 +12,7 @@ export class World {
   width: number
   height: number
   cells: Cell[]
-  neighbourMap: {[key:string]:Point[]}
+  neighbourMap: {[key:string]:number[]}
 
   constructor () {
     this.width = 10
@@ -26,13 +26,13 @@ export class World {
     let index = 0
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const cell = { x, y, index: index++, type: 'void' }
+        const cell = { type: 'void', x, y, index: index++ }
         this.cells.push(cell)
       }
     }
 
     for (const cell of this.cells) {
-      this.neighbourMap[cell.index] = this.getNeighbourCoords(cell)
+      this.neighbourMap[cell.index] = this.getNeighbourIndices(cell)
     }
   }
 
@@ -56,13 +56,13 @@ export class World {
     }
   }
 
-  getNeighbourCoords (hex:Point): Point[] {
+  getNeighbourIndices (hex:Point): number[] {
     const result = []
     for (let d = 0; d < 6; ++d) {
       const coord = oddqOffsetNeighbor(hex.x, hex.y, d)
       const neigh = this.get(coord.x, coord.y)
       if (neigh != null) {
-        result.push(coord)
+        result.push(neigh.index)
       }
     }
     return result
@@ -70,10 +70,10 @@ export class World {
 
   getNeighbours (cell: Cell):Cell[] {
     const res = []
-    for (const point of this.neighbourMap[cell.index]) {
-      const cell = this.get(point.x, point.y)
-      if (cell != null && cell.type !== 'void') {
-        res.push(cell)
+    for (const idx of this.neighbourMap[cell.index]) {
+      const neigh = this.cells[idx]
+      if (neigh.type !== 'void') {
+        res.push(neigh)
       }
     }
     return res
@@ -83,6 +83,7 @@ export class World {
     const newCells = []
     for (const cell of this.cells) {
       if (cell.type === 'void') {
+        newCells.push(cell)
         continue
       }
       const neighours = this.getNeighbours(cell)
