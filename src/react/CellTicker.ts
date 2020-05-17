@@ -42,6 +42,14 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
       transform({ animal: 'fish' })
     }
 
+    if (cell.animal == null && cell.bones > 0.1 && surroundedBy('animal', null)) {
+      transform({ animal: 'octopus' })
+    }
+
+    if (cell.animal === 'octupus' && !surroundedBy('animal', null)) {
+      transform({ animal: null })
+    }
+
     if (cell.animal === 'fish' && cell.plantlife < 0.1) {
       transform({ animal: null })
     }
@@ -100,7 +108,7 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
       transform({ animal: null, fertilizer: 0.1 })
     }
     if (cell.fertilizer > 0.6) {
-      transform({ plant: 'palm tree' })
+      transform({ plant: 'palm tree', fertilizer: 0 }, { set: true })
     }
   }
   if (cell.type === 'earth') {
@@ -111,7 +119,7 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
       transform({ animal: null, fertilizer: 0.1 })
     }
     if (cell.fertilizer > 0.6) {
-      transform({ plant: 'tree' })
+      transform({ plant: 'tree', fertilizer: 0 }, { set: true })
     }
   }
   if (cell.type === 'earth' || cell.type === 'rock') {
