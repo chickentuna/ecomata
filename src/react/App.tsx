@@ -50,7 +50,7 @@ class App extends Component<Props, State> {
   }
 
   initUI () {
-    const tooltipHandler = new TooltipHandler(this.container, this.world)
+    const tooltipHandler = new TooltipHandler(this.worldDrawer.container, this.world)
     tooltipHandler.init()
     this.tooltip = tooltipHandler
   }
@@ -66,8 +66,8 @@ class App extends Component<Props, State> {
     this.world.setup()
 
     this.worldDrawer = new WorldDrawer()
-    const worldContainer = this.worldDrawer.init(this.world)
-    this.container.addChild(worldContainer)
+    this.worldDrawer.init(this.world)
+    this.container.addChild(this.worldDrawer.container)
   }
 
   launchTicker () {

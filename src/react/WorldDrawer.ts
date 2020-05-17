@@ -161,6 +161,7 @@ export class WorldDrawer {
       hex.text.anchor.set(0.5)
       hex.subText.scale.set(0.4)
       hex.subText.anchor.set(0.5, 0)
+      hex.subText.y = -1
 
       hex.group.position.set(hexaP.x, hexaP.y)
 
@@ -177,7 +178,7 @@ export class WorldDrawer {
     )
     container.addChild(g)
 
-    return container
+    this.container = container
   }
 
   drawHex (cell:Cell) {
