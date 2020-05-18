@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { World, Cell } from './World'
 import { HEXAGON_X_SEP, HEXAGON_RADIUS, HEXAGON_HEIGHT, hexToScreen } from './hex'
+import { ANIMALS, PLANTS } from './emoji'
 
 interface Hex {
   group: PIXI.Container,
