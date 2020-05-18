@@ -51,7 +51,7 @@ class App extends Component<Props, State> {
   }
 
   initUI () {
-    const tooltipHandler = new TooltipHandler(this.worldDrawer.container, this.world)
+    const tooltipHandler = new TooltipHandler(this.container, this.worldDrawer.container, this.world)
     tooltipHandler.init()
     this.tooltip = tooltipHandler
   }

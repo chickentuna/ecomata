@@ -40,7 +40,7 @@ export class World {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       return null
     }
-    return this.cells[y * this.height + x]
+    return this.cells[y * this.width + x]
   }
 
   setup () {

@@ -47,21 +47,23 @@ function initTooltip (): PIXI.Container {
 
 export class TooltipHandler {
   container: PIXI.Container
+  worldContainer: PIXI.Container
   tooltip: PIXI.Container
   background: PIXI.Graphics
   label: PIXI.Text
   world: World
   mouseData: PIXI.interaction.InteractionData
 
-  constructor (container:PIXI.Container, world:World) {
+  constructor (container:PIXI.Container, worldContainer:PIXI.Container, world:World) {
     this.container = container
+    this.worldContainer = container
     this.world = world
   }
 
   init () {
     initTooltip.bind(this)()
-    this.container.interactive = true
-    this.container.on('mousemove', (ev:PIXI.interaction.InteractionEvent) => {
+    this.worldContainer.interactive = true
+    this.worldContainer.on('mousemove', (ev:PIXI.interaction.InteractionEvent) => {
       this.mouseData = ev.data
       this.refresh()
     })
@@ -71,10 +73,9 @@ export class TooltipHandler {
 
   refresh () {
     const tooltip = this.tooltip
-    const container = this.container
 
     if (this.mouseData) {
-      var pos = this.mouseData.getLocalPosition(container)
+      var pos = this.mouseData.getLocalPosition(this.worldContainer)
       tooltip.x = pos.x
       tooltip.y = pos.y
 
