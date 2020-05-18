@@ -1,6 +1,6 @@
 {
-  "name": "npm-or-pok",
-  "homepage": "/",
+  "name": "ecomata",
+  "homepage": "https://chickentuna.github.io/ecomata/build",
   "version": "0.1.0",
   "scripts": {
     "start": "react-scripts start",
