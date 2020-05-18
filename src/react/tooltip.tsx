@@ -111,6 +111,7 @@ export class TooltipHandler {
       tooltip.pivot.x = -30
       tooltip.pivot.y = -50
 
+      /*
       if (tooltip.y - tooltip.pivot.y + tooltip.height > container.width) {
         tooltip.pivot.y = 10 + tooltip.height
         tooltip.y -= tooltip.y - tooltip.pivot.y + tooltip.height - container.height
@@ -119,6 +120,7 @@ export class TooltipHandler {
       if (tooltip.x - tooltip.pivot.x + tooltip.width > container.width) {
         tooltip.pivot.x = tooltip.width
       }
+      */
     }
   }
 }

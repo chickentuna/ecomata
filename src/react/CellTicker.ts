@@ -1,7 +1,6 @@
 import { Cell, World } from './World'
 import { choice } from './utils'
-import { BONE_MASS, HUMIDITY_SOURCE } from './properties'
-import { interaction } from 'pixi.js'
+import { HUMIDITY_SOURCE } from './properties'
 
 const HUMIDITY_DISTANCE = 4
 
@@ -51,16 +50,72 @@ function applyHumidity (cell:Cell, transform: TransformCollector) {
 }
 
 function apply (cell:Cell, transform:TransformCollector) {
-  for (const animal of ANIMALS) {
-
+  if (cell.animal == null) {
+    Object.entries(ANIMALS).forEach(([id, animal]) => {
+      if (animal.spawn(cell)) {
+        transform({ animal: id })
+      }
+    })
+  } else {
+    const animal = ANIMALS[cell.animal]
+    if (animal.consume) {
+      if (cell[animal.consume.id] == null || cell[animal.consume.id] < animal.consume.amount) {
+        // Starve
+        transform(die(animal))
+      } else {
+        // Eat
+        transform({ [animal.consume.id]: -animal.consume.amount })
+      }
+    }
+    if (animal.predators) {
+      const predatorCount = count(c => animal.predators.includes(c.animal))
+      const sameAnimalCount = countAnimals(cell.animal)
+      if (predatorCount * 2 >= sameAnimalCount) {
+        // Eaten
+        transform(die(animal))
+      }
+    }
+    if (animal.prey) {
+      const preyCount = count(c => animal.prey.includes(c.animal))
+      if (preyCount === 0) {
+        // Starve
+        transform(die(animal))
+      }
+    }
+  }
+  if (cell.plant == null) {
+    Object.entries(PLANTS).forEach(([id, plant]) => {
+      if (plant.spawn(cell)) {
+        transform({
+          plant: id,
+          [plant.spawnCost.id]: -plant.spawnCost.amount
+        })
+      }
+    })
   }
 
   applyHumidity(cell, transform)
+
+  if (cell.type === 'ocean') {
+    if (cell.plantlife == null || cell.plantlife < 1) {
+      transform({ plantlife: 0.1 })
+    }
+    if (cell.bones === 1) {
+      transform({ type: 'rock' }, { replace: true })
+    }
+
+    if (countParam('type', 'rock') >= 1) {
+      transform({ type: 'sand' }, { replace: true })
+    }
+  } else if (cell.type === 'sand') {
+    if (cell.humidity <= HUMIDITY_DISTANCE - 2) {
+      transform({ type: 'earth' }, { replace: true })
+    }
+  }
 }
 
 interface Animal {
   spawn: (cell:Cell) => boolean,
-  id: string,
   predators?: string[],
   consume?: Contents,
   dropOnDeath?: Contents,
@@ -73,40 +128,95 @@ interface Contents {
 }
 
 interface Plant {
-  id: string,
-  spawnFor: Contents
+  spawn: (cell:Cell) => boolean,
+  spawnCost: Contents
 }
 
 // TODO: how to despawn plants?
-export const PLANTS:Plant[] = [
-  {
-    id: 'tree',
-    spawnFor: {
+export const PLANTS:{[id:string]:Plant} = {
+  tree: {
+    spawn: (cell:Cell) => {
+      return cell.type === 'earth' && cell.fertilizer === 1 && cell.humidity > 0
+    },
+    spawnCost: {
       id: 'fertilizer',
       amount: 1
     }
-
+  },
+  'palm tree': {
+    spawn: (cell:Cell) => {
+      return cell.type === 'sand' && cell.fertilizer === 1 && cell.humidity > 0
+    },
+    spawnCost: {
+      id: 'fertilizer',
+      amount: 1
+    }
   }
-]
+}
 
-export const ANIMALS:Animal[] = [
-  {
-    id: 'fish',
+// TODO: needs other leave condition than just starvation
+export const ANIMALS:{[id:string]:Animal} = {
+  fish: {
     spawn: (cell:Cell) => {
       return cell.type === 'ocean' && cell.plantlife > 0.5 && count(c => c.type !== 'ocean') <= 1
     },
     predators: ['shark'],
     consume: {
       id: 'plantlife',
-      amount: 0.2
+      amount: 0.1
     },
     dropOnDeath: {
-      id: 'bonemass',
+      id: 'bones',
       amount: 0.05
     }
   },
-  {
-    id: 'shark',
+  crab: {
+    spawn: (cell:Cell) => {
+      return (cell.type === 'sand' && countParam('type', 'ocean') >= 1 && countParam('type', 'rock') >= 1)
+    },
+    dropOnDeath: {
+      id: 'fertilizer',
+      amount: 0.1
+    },
+    predators: ['bird', 'octopus'],
+    prey: ['octopus']
+  },
+  bug: {
+    spawn: (cell:Cell) => {
+      return (
+        cell.type === 'earth'
+      )
+    },
+    dropOnDeath: {
+      id: 'fertilizer',
+      amount: 0.05
+    },
+    predators: ['bird']
+  },
+  bird: {
+    spawn: (cell:Cell) => {
+      return (
+        (cell.type === 'rock' || cell.plant === 'tree') &&
+        (countAnimals('crab') + countAnimals('bug')) >= 3
+      )
+    },
+    prey: ['crab', 'bug'],
+    dropOnDeath: {
+      id: 'fertilizer',
+      amount: 0.2
+    }
+  },
+  octopus: {
+    spawn: (cell:Cell) => {
+      return (
+        (cell.type === 'ocean') &&
+        surroundedBy('animal', null) &&
+        cell.bones > 0.6
+      )
+    },
+    prey: ['crab']
+  },
+  shark: {
     spawn: (cell:Cell) => {
       return (cell.type === 'ocean' && countAnimals('fish') > 3 && surroundedBy('type', 'ocean'))
     },
@@ -116,7 +226,7 @@ export const ANIMALS:Animal[] = [
       amount: 0.1
     }
   }
-]
+}
 
 export class CellTicker {
   static tick (cell: Cell, neighbours: Cell[], world: World):Cell {
@@ -153,4 +263,11 @@ export class CellTicker {
 
     return cell
   }
+}
+function die (animal: Animal) : Changes {
+  const changes = { animal: null }
+  if (animal.dropOnDeath) {
+    changes[animal.dropOnDeath.id] = animal.dropOnDeath.amount
+  }
+  return changes
 }
