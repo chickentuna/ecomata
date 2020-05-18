@@ -50,36 +50,26 @@ function applyHumidity (cell:Cell, transform: TransformCollector) {
 }
 
 function apply (cell:Cell, transform:TransformCollector) {
-  if (cell.animal == null) {
-    Object.entries(ANIMALS).forEach(([id, animal]) => {
-      if (animal.spawn(cell)) {
-        transform({ animal: id })
-      }
-    })
-  } else {
-    const animal = ANIMALS[cell.animal]
-    if (animal.consume) {
-      if (cell[animal.consume.id] == null || cell[animal.consume.id] < animal.consume.amount) {
-        // Starve
-        transform(die(animal))
-      } else {
-        // Eat
-        transform({ [animal.consume.id]: -animal.consume.amount })
-      }
+  Object.entries(ANIMALS).forEach(([id, animal]) => {
+    if (animal.spawn(cell)) {
+      transform({ animal: id })
     }
+  })
+
+  if (cell.animal != null) {
+    const animal = ANIMALS[cell.animal]
     if (animal.predators) {
       const predatorCount = count(c => animal.predators.includes(c.animal))
-      const sameAnimalCount = countAnimals(cell.animal)
-      if (predatorCount * 2 >= sameAnimalCount) {
-        // Eaten
-        transform(die(animal))
+      if (predatorCount > 0) {
+        transform({ animal: null })
       }
     }
     if (animal.prey) {
       const preyCount = count(c => animal.prey.includes(c.animal))
+      const competitionCount = countAnimals(cell.animal)
       if (preyCount === 0) {
         // Starve
-        transform(die(animal))
+        transform({ animal: null })
       }
     }
   }
@@ -97,9 +87,6 @@ function apply (cell:Cell, transform:TransformCollector) {
   applyHumidity(cell, transform)
 
   if (cell.type === 'ocean') {
-    if (cell.plantlife == null || cell.plantlife < 1) {
-      transform({ plantlife: 0.1 })
-    }
     if (cell.bones === 1) {
       transform({ type: 'rock' }, { replace: true })
     }
@@ -154,77 +141,20 @@ export const PLANTS:{[id:string]:Plant} = {
   }
 }
 
-// TODO: needs other leave condition than just starvation
 export const ANIMALS:{[id:string]:Animal} = {
   fish: {
     spawn: (cell:Cell) => {
-      return cell.type === 'ocean' && cell.plantlife > 0.5 && count(c => c.type !== 'ocean') <= 1
+      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 1
     },
-    predators: ['shark'],
-    consume: {
-      id: 'plantlife',
-      amount: 0.1
-    },
-    dropOnDeath: {
-      id: 'bones',
-      amount: 0.05
-    }
-  },
-  crab: {
-    spawn: (cell:Cell) => {
-      return (cell.type === 'sand' && countParam('type', 'ocean') >= 1 && countParam('type', 'rock') >= 1)
-    },
-    dropOnDeath: {
-      id: 'fertilizer',
-      amount: 0.1
-    },
-    predators: ['bird', 'octopus'],
-    prey: ['octopus']
-  },
-  bug: {
-    spawn: (cell:Cell) => {
-      return (
-        cell.type === 'earth'
-      )
-    },
-    dropOnDeath: {
-      id: 'fertilizer',
-      amount: 0.05
-    },
-    predators: ['bird']
-  },
-  bird: {
-    spawn: (cell:Cell) => {
-      return (
-        (cell.type === 'rock' || cell.plant === 'tree') &&
-        (countAnimals('crab') + countAnimals('bug')) >= 3
-      )
-    },
-    prey: ['crab', 'bug'],
-    dropOnDeath: {
-      id: 'fertilizer',
-      amount: 0.2
-    }
-  },
-  octopus: {
-    spawn: (cell:Cell) => {
-      return (
-        (cell.type === 'ocean') &&
-        surroundedBy('animal', null) &&
-        cell.bones > 0.6
-      )
-    },
-    prey: ['crab']
+    predators: ['shark']
   },
   shark: {
     spawn: (cell:Cell) => {
-      return (cell.type === 'ocean' && countAnimals('fish') > 3 && surroundedBy('type', 'ocean'))
+      return (
+        (cell.animal === 'fish' && cell.type === 'ocean' && surroundedBy('type', 'ocean') && countAnimals('shark') > 0)
+      )
     },
-    prey: ['fish'],
-    dropOnDeath: {
-      id: 'bones',
-      amount: 0.1
-    }
+    prey: ['fish']
   }
 }
 
@@ -263,11 +193,4 @@ export class CellTicker {
 
     return cell
   }
-}
-function die (animal: Animal) : Changes {
-  const changes = { animal: null }
-  if (animal.dropOnDeath) {
-    changes[animal.dropOnDeath.id] = animal.dropOnDeath.amount
-  }
-  return changes
 }

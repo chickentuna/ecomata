@@ -15,8 +15,8 @@ export class World {
   neighbourMap: {[key:string]:number[]}
 
   constructor () {
-    this.width = 20
-    this.height = 12
+    this.width = 40
+    this.height = 24
     this.neighbourMap = {}
     this.initGrid()
   }
@@ -48,9 +48,6 @@ export class World {
     for (const cell of this.cells) {
       if ((cell.y === 0 && cell.x === 0) || (cell.y === this.height - 1 && cell.x === this.width - 1)) {
         continue
-      }
-      if (cell.x === this.width - 1 && cell.y === 1) {
-        cell.animal = 'fish'
       }
       cell.type = 'ocean'
     }

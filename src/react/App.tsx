@@ -4,12 +4,15 @@ import * as PIXI from 'pixi.js'
 import { World } from './World'
 import { TooltipHandler } from './tooltip'
 import { WorldDrawer } from './WorldDrawer'
+import { ANIMALS } from './emoji'
+import { screenToHex } from './hex'
 
 const DEFAULT_MS_PER_TICK = 100
 
 interface State {
-  paused: boolean,
+  paused: boolean
   msPerTick: number
+  animal: string
 }
 interface Props {
 
@@ -32,7 +35,8 @@ class App extends Component<Props, State> {
     super(props)
     this.state = {
       paused: true,
-      msPerTick: DEFAULT_MS_PER_TICK
+      msPerTick: DEFAULT_MS_PER_TICK,
+      animal: 'fish'
     }
   }
 
@@ -71,7 +75,17 @@ class App extends Component<Props, State> {
     this.worldDrawer = new WorldDrawer()
     this.worldDrawer.init(this.world)
     this.container.addChild(this.worldDrawer.container)
-    this.worldDrawer.container.scale.set(2)
+    this.worldDrawer.container.scale.set(1)
+    this.worldDrawer.container.interactive = true
+    this.worldDrawer.container.on('click', (ev) => {
+      const point = ev.data.getLocalPosition(this.worldDrawer.container)
+      const hexCoord = screenToHex(point)
+      const cell = this.world.get(hexCoord.x, hexCoord.y)
+      if (cell !== null && cell.type !== 'void') {
+        cell.animal = this.state.animal
+        this.worldDrawer.draw()
+      }
+    })
   }
 
   launchTicker () {
@@ -110,6 +124,10 @@ class App extends Component<Props, State> {
     this.setState({ msPerTick: +value })
   }
 
+  handleAnimalChange (value:string) {
+    this.setState({ animal: value })
+  }
+
   render () {
     return (
       <div className='App'>
@@ -129,6 +147,11 @@ class App extends Component<Props, State> {
             <label>ms per tick:
               <input type='number' value={this.state.msPerTick} step='10' onChange={(ev) => this.handleMsChange(ev.target.value)} />
             </label>
+            <select value={this.state.animal} onChange={ev => this.handleAnimalChange(ev.target.value)}>
+              <option label={ANIMALS.fish} value='fish' />
+              <option label={ANIMALS.shark} value='shark' />
+            </select>
+            selected: {this.state.animal}
           </div>
 
         </div>
