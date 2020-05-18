@@ -1,6 +1,7 @@
 import { Cell, World } from './World'
 import { choice } from './utils'
 import { BONE_MASS, HUMIDITY_SOURCE } from './properties'
+import { interaction } from 'pixi.js'
 
 const HUMIDITY_DISTANCE = 4
 
@@ -33,55 +34,9 @@ interface Transform {
   changes: Changes,
   opts?: TransformOpts
 }
+type TransformCollector = (changes: Changes, opts?: TransformOpts) => void
 
-function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) => void) {
-  if (cell.type === 'ocean') {
-    transform({ plantlife: 0.1 })
-
-    if (cell.animal == null && cell.plantlife > 0.5 && count(c => c.type !== 'ocean') <= 1) {
-      transform({ animal: 'fish' })
-    }
-
-    if (cell.animal == null && cell.bones > 0.1 && surroundedBy('animal', null)) {
-      transform({ animal: 'octopus' })
-    }
-
-    if (cell.animal === 'octupus' && !surroundedBy('animal', null)) {
-      transform({ animal: null })
-    }
-
-    if (cell.animal === 'fish' && cell.plantlife < 0.1) {
-      transform({ animal: null })
-    }
-
-    if (cell.animal === 'fish' && cell.plantlife >= 0.1) {
-      transform({ plantlife: -0.2 })
-    }
-
-    if (cell.animal == null && countAnimals('fish') > 3 && surroundedBy('type', 'ocean')) {
-      transform({ animal: 'shark' })
-    }
-
-    if (cell.animal === 'fish' &&
-      countAnimals('shark') > 0 &&
-      countAnimals('fish') === 0
-    ) {
-      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
-    }
-
-    if (cell.animal === 'shark' && countAnimals('fish') === 0) {
-      transform({ animal: null, bones: +BONE_MASS[cell.animal] })
-    }
-
-    if (cell.bones === 1) {
-      transform({ type: 'rock' }, { replace: true })
-    }
-
-    if (countParam('type', 'rock') >= 1) {
-      transform({ type: 'sand' }, { replace: true })
-    }
-  }
-
+function applyHumidity (cell:Cell, transform: TransformCollector) {
   if (!HUMIDITY_SOURCE.includes(cell.type)) {
     const humdityScore = Math.max(...currentNeighbours.map(
       c => {
@@ -93,44 +48,75 @@ function apply (cell:Cell, transform:(changes: Changes, opts?: TransformOpts) =>
     ))
     transform({ humidity: Math.max(0, humdityScore - 1) }, { set: true })
   }
-
-  if (cell.type === 'sand') {
-    if (cell.humidity <= HUMIDITY_DISTANCE - 2) {
-      transform({ type: 'earth' }, { replace: true })
-    }
-    if (cell.animal == null && countParam('type', 'ocean') >= 1) {
-      transform({ animal: 'crab' })
-    }
-    if (cell.animal === 'crab' && countParam('type', 'ocean') === 0) {
-      transform({ animal: null, fertilizer: 0.1 })
-    }
-    if (cell.animal === 'crab' && countAnimals('bird') * 2 >= countAnimals('crab')) {
-      transform({ animal: null, fertilizer: 0.1 })
-    }
-    if (cell.fertilizer > 0.6) {
-      transform({ plant: 'palm tree', fertilizer: 0 }, { set: true })
-    }
-  }
-  if (cell.type === 'earth') {
-    if (cell.animal == null && countAnimals('bird') === 0) {
-      transform({ animal: 'bug' })
-    }
-    if (cell.animal === 'bug' && countAnimals('bird') > 1) {
-      transform({ animal: null, fertilizer: 0.1 })
-    }
-    if (cell.fertilizer > 0.6) {
-      transform({ plant: 'tree', fertilizer: 0 }, { set: true })
-    }
-  }
-  if (cell.type === 'earth' || cell.type === 'rock') {
-    if (cell.animal == null && (countAnimals('crab') + countAnimals('bug')) >= 3) {
-      transform({ animal: 'bird' })
-    }
-    if (cell.animal === 'bird' && (countAnimals('crab') + countAnimals('bug')) === 0) {
-      transform({ animal: null, fertilizer: 0.2 })
-    }
-  }
 }
+
+function apply (cell:Cell, transform:TransformCollector) {
+  for (const animal of ANIMALS) {
+
+  }
+
+  applyHumidity(cell, transform)
+}
+
+interface Animal {
+  spawn: (cell:Cell) => boolean,
+  id: string,
+  predators?: string[],
+  consume?: Contents,
+  dropOnDeath?: Contents,
+  prey?:string[] // Not necassarily equal to the concerned animals' predators
+}
+
+interface Contents {
+  id: string,
+  amount: number
+}
+
+interface Plant {
+  id: string,
+  spawnFor: Contents
+}
+
+// TODO: how to despawn plants?
+export const PLANTS:Plant[] = [
+  {
+    id: 'tree',
+    spawnFor: {
+      id: 'fertilizer',
+      amount: 1
+    }
+
+  }
+]
+
+export const ANIMALS:Animal[] = [
+  {
+    id: 'fish',
+    spawn: (cell:Cell) => {
+      return cell.type === 'ocean' && cell.plantlife > 0.5 && count(c => c.type !== 'ocean') <= 1
+    },
+    predators: ['shark'],
+    consume: {
+      id: 'plantlife',
+      amount: 0.2
+    },
+    dropOnDeath: {
+      id: 'bonemass',
+      amount: 0.05
+    }
+  },
+  {
+    id: 'shark',
+    spawn: (cell:Cell) => {
+      return (cell.type === 'ocean' && countAnimals('fish') > 3 && surroundedBy('type', 'ocean'))
+    },
+    prey: ['fish'],
+    dropOnDeath: {
+      id: 'bones',
+      amount: 0.1
+    }
+  }
+]
 
 export class CellTicker {
   static tick (cell: Cell, neighbours: Cell[], world: World):Cell {
