@@ -15,8 +15,8 @@ export class World {
   neighbourMap: {[key:string]:number[]}
 
   constructor () {
-    this.width = 10
-    this.height = 10
+    this.width = 20
+    this.height = 12
     this.neighbourMap = {}
     this.initGrid()
   }
