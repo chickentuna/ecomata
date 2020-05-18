@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js'
 import { World } from './World'
 import { screenToHex } from './hex'
+import { HEIGHT, WIDTH } from './App'
 
 function generateText (text:string, size:number, color:number|string, align:string): PIXI.Text {
   var textEl = new PIXI.Text(text, {
@@ -39,7 +40,7 @@ function initTooltip (): PIXI.Container {
   tooltip.addChild(background)
   tooltip.addChild(label)
 
-  tooltip.scale.set(0.25)
+  tooltip.scale.set(0.5)
 
   tooltip.interactiveChildren = false
   return tooltip
@@ -56,7 +57,7 @@ export class TooltipHandler {
 
   constructor (container:PIXI.Container, worldContainer:PIXI.Container, world:World) {
     this.container = container
-    this.worldContainer = container
+    this.worldContainer = worldContainer
     this.world = world
   }
 
@@ -76,8 +77,9 @@ export class TooltipHandler {
 
     if (this.mouseData) {
       var pos = this.mouseData.getLocalPosition(this.worldContainer)
-      tooltip.x = pos.x
-      tooltip.y = pos.y
+
+      tooltip.x = pos.x * this.worldContainer.scale.x
+      tooltip.y = pos.y * this.worldContainer.scale.y
 
       const hexCoords = screenToHex(pos)
 
@@ -112,16 +114,11 @@ export class TooltipHandler {
       tooltip.pivot.x = -30
       tooltip.pivot.y = -50
 
-      /*
-      if (tooltip.y - tooltip.pivot.y + tooltip.height > container.width) {
-        tooltip.pivot.y = 10 + tooltip.height
-        tooltip.y -= tooltip.y - tooltip.pivot.y + tooltip.height - container.height
-      }
+      const offY = Math.max(0, tooltip.y + 50 + tooltip.height - HEIGHT)
+      tooltip.pivot.y += offY * this.worldContainer.scale.y
 
-      if (tooltip.x - tooltip.pivot.x + tooltip.width > container.width) {
-        tooltip.pivot.x = tooltip.width
-      }
-      */
+      const offX = Math.max(0, tooltip.x + 50 + tooltip.width - WIDTH)
+      tooltip.pivot.x += offX * this.worldContainer.scale.x
     }
   }
 }

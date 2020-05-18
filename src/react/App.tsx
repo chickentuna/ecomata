@@ -15,6 +15,9 @@ interface Props {
 
 }
 
+export const WIDTH = 640
+export const HEIGHT = 480
+
 class App extends Component<Props, State> {
   app: PIXI.Application
   world: World
@@ -34,10 +37,10 @@ class App extends Component<Props, State> {
   }
 
   componentDidMount () {
-    //TODO: do not used application as it eats up cpu even when game is paused
+    // TODO: do not used application as it eats up cpu even when game is paused
     this.app = new PIXI.Application({
-      width: 640,
-      height: 480,
+      width: WIDTH,
+      height: HEIGHT,
       antialias: true
     })
     document.querySelector('#canvas-zone').appendChild(this.app.view)
@@ -61,7 +64,6 @@ class App extends Component<Props, State> {
     this.container.sortableChildren = true
     this.app.stage.addChild(this.container)
     this.container.position.set(30, 30)
-    this.container.scale.set(2)
 
     this.world = new World()
     this.world.setup()
@@ -69,6 +71,7 @@ class App extends Component<Props, State> {
     this.worldDrawer = new WorldDrawer()
     this.worldDrawer.init(this.world)
     this.container.addChild(this.worldDrawer.container)
+    this.worldDrawer.container.scale.set(2)
   }
 
   launchTicker () {
