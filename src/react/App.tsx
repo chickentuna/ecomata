@@ -34,6 +34,7 @@ class App extends Component<Props, State> {
   }
 
   componentDidMount () {
+    //TODO: do not used application as it eats up cpu even when game is paused
     this.app = new PIXI.Application({
       width: 640,
       height: 480,
