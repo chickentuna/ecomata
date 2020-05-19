@@ -8,5 +8,8 @@ export function randint (a:number, b:number):number {
 }
 
 export function choice <T> (arr:T[]):T {
+  if (arr.length === 1) {
+    return arr[0]
+  }
   return arr[randint(0, arr.length)]
 }
