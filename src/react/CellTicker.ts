@@ -58,20 +58,23 @@ function apply (cell:Cell, transform:TransformCollector) {
 
   if (cell.animal != null) {
     const animal = ANIMALS[cell.animal]
-    if (animal.predators) {
-      const predatorCount = count(c => animal.predators.includes(c.animal))
-      if (predatorCount > 0) {
-        transform({ animal: null })
-      }
+    if (animal.die(cell)) {
+      transform({ animal: null })
     }
-    if (animal.prey) {
-      const preyCount = count(c => animal.prey.includes(c.animal))
-      const competitionCount = countAnimals(cell.animal)
-      if (preyCount === 0) {
-        // Starve
-        transform({ animal: null })
-      }
-    }
+    // if (animal.predators) {
+    //   const predatorCount = count(c => animal.predators.includes(c.animal))
+    //   if (predatorCount > 0) {
+    //     transform({ animal: null })
+    //   }
+    // }
+    // if (animal.prey) {
+    //   const preyCount = count(c => animal.prey.includes(c.animal))
+    //   const competitionCount = countAnimals(cell.animal)
+    //   if (preyCount === 0) {
+    //     // Starve
+    //     transform({ animal: null })
+    //   }
+    // }
   }
   if (cell.plant == null) {
     Object.entries(PLANTS).forEach(([id, plant]) => {
@@ -102,10 +105,9 @@ function apply (cell:Cell, transform:TransformCollector) {
 }
 
 interface Animal {
-  spawn: (cell:Cell) => boolean,
-  predators?: string[],
-  consume?: Contents,
-  dropOnDeath?: Contents,
+  spawn: (cell:Cell) => boolean
+  die: (cell:Cell) => boolean
+  predators?: string[]
   prey?:string[] // Not necassarily equal to the concerned animals' predators
 }
 
@@ -144,15 +146,35 @@ export const PLANTS:{[id:string]:Plant} = {
 export const ANIMALS:{[id:string]:Animal} = {
   fish: {
     spawn: (cell:Cell) => {
-      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 1
+      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 2
     },
-    predators: ['shark']
+    predators: ['shark'],
+    die: (cell:Cell) => {
+      // const predatorCount = count(c => this.predators.includes(c.animal))
+      // if (predatorCount > 0) {
+      //   return true
+      // }
+      // return false
+      const fishCount = countAnimals('fish')
+      return fishCount <= 1 || fishCount >= 3
+    }
+
   },
   shark: {
     spawn: (cell:Cell) => {
       return (
-        (cell.animal === 'fish' && cell.type === 'ocean' && surroundedBy('type', 'ocean') && countAnimals('shark') > 0)
+        (cell.animal === 'fish' && cell.type === 'ocean' && countAnimals('shark') === 2)
       )
+    },
+    die: (cell:Cell) => {
+      // const preyCount = count(c => this.prey.includes(c.animal))
+      // const competitionCount = countAnimals(cell.animal)
+      // if (preyCount === 0) {
+      //   return true
+      // }
+      // return false
+      const fishCount = countAnimals('shark')
+      return fishCount <= 1 || fishCount >= 3
     },
     prey: ['fish']
   }
