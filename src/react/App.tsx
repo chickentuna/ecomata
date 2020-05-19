@@ -25,7 +25,6 @@ class App extends Component<Props, State> {
   app: PIXI.Application
   world: World
   container: PIXI.Container
-  time: number
   lastWorldTick: number
   worldDrawer: WorldDrawer
   tooltip: TooltipHandler
@@ -91,16 +90,19 @@ class App extends Component<Props, State> {
   launchTicker () {
     setTimeout(() => {
       if (!this.state.paused) {
-        this.world.tick()
-        this.worldDrawer.draw()
+        this.tick()
       }
       this.launchTicker()
     }, this.state.msPerTick)
   }
 
+  tick () {
+    this.world.tick()
+    this.worldDrawer.draw()
+  }
+
   animate () {
     const delta = this.app.ticker.deltaMS
-    this.time += delta
     if (delta >= 100) {
       console.log('too slow!')
     }
@@ -148,10 +150,12 @@ class App extends Component<Props, State> {
               <input type='number' value={this.state.msPerTick} step='10' onChange={(ev) => this.handleMsChange(ev.target.value)} />
             </label>
             <select value={this.state.animal} onChange={ev => this.handleAnimalChange(ev.target.value)}>
-              <option label={ANIMALS.fish} value='fish' />
-              <option label={ANIMALS.shark} value='shark' />
+              <option label={`${ANIMALS.fish} fish`} value='fish' />
+              <option label={`${ANIMALS.shark} shark`} value='shark' />
             </select>
-            selected: {this.state.animal}
+            <button onClick={() => this.tick()}>
+              tick
+            </button>
           </div>
 
         </div>
