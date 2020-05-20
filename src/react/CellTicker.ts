@@ -50,21 +50,6 @@ function applyHumidity (cell:Cell, transform: TransformCollector) {
 }
 
 function apply (cell:Cell, transform:TransformCollector) {
-  // Object.entries(ANIMALS).forEach(([id, animal]) => {
-  //   if (animal.spawn(cell)) {
-  //     transform({ animal: id })
-  //   }
-  // })
-
-  // if (cell.animal != null) {
-  //   const animal = ANIMALS[cell.animal]
-  //   if (animal.die(cell)) {
-  //     transform({ animal: null })
-  //   }
-  // }
-  if (cell.x == 26 && cell.y == 4 && cell.animal == 'shark') {
-    // debugger
-  }
   if (countAnimals('shark') === 2 && (cell.animal === 'fish' || cell.animal == null) && countAnimals('fish') > 0) {
     transform({ animal: 'shark' })
   } else if (countAnimals('fish') === 2 && (cell.animal == null)) {
