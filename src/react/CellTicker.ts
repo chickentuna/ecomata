@@ -14,11 +14,11 @@ function countAnimals (name:string) {
   return count(c => c.animal === name)
 }
 
-function countParam (key:string, name:string) {
+export function countParam (key:string, name:string) {
   return count(c => c[key] === name)
 }
 
-function surroundedBy (key:string, name:string) {
+export function surroundedBy (key:string, name:string) {
   return currentNeighbours.every(c => c[key] === name)
 }
 
@@ -35,7 +35,7 @@ interface Transform {
 }
 type TransformCollector = (changes: Changes, opts?: TransformOpts) => void
 
-function applyHumidity (cell:Cell, transform: TransformCollector) {
+export function applyHumidity (cell:Cell, transform: TransformCollector) {
   if (!HUMIDITY_SOURCE.includes(cell.type)) {
     const humdityScore = Math.max(...currentNeighbours.map(
       c => {
