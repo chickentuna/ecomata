@@ -50,43 +50,29 @@ function applyHumidity (cell:Cell, transform: TransformCollector) {
 }
 
 function apply (cell:Cell, transform:TransformCollector) {
-  Object.entries(ANIMALS).forEach(([id, animal]) => {
-    if (animal.spawn(cell)) {
-      transform({ animal: id })
-    }
-  })
+  // Object.entries(ANIMALS).forEach(([id, animal]) => {
+  //   if (animal.spawn(cell)) {
+  //     transform({ animal: id })
+  //   }
+  // })
 
-  if (cell.animal != null) {
-    const animal = ANIMALS[cell.animal]
-    if (animal.die(cell)) {
-      transform({ animal: null })
-    }
+  // if (cell.animal != null) {
+  //   const animal = ANIMALS[cell.animal]
+  //   if (animal.die(cell)) {
+  //     transform({ animal: null })
+  //   }
+  // }
+  if (cell.x == 26 && cell.y == 4 && cell.animal == 'shark') {
+    // debugger
   }
-  if (cell.plant == null) {
-    Object.entries(PLANTS).forEach(([id, plant]) => {
-      if (plant.spawn(cell)) {
-        transform({
-          plant: id,
-          [plant.spawnCost.id]: -plant.spawnCost.amount
-        })
-      }
-    })
-  }
-
-  applyHumidity(cell, transform)
-
-  if (cell.type === 'ocean') {
-    if (cell.bones === 1) {
-      transform({ type: 'rock' }, { replace: true })
-    }
-
-    if (countParam('type', 'rock') >= 1) {
-      transform({ type: 'sand' }, { replace: true })
-    }
-  } else if (cell.type === 'sand') {
-    if (cell.humidity <= HUMIDITY_DISTANCE - 2) {
-      transform({ type: 'earth' }, { replace: true })
-    }
+  if (countAnimals('shark') === 2 && (cell.animal === 'fish' || cell.animal == null) && countAnimals('fish') > 0) {
+    transform({ animal: 'shark' })
+  } else if (countAnimals('fish') === 2 && (cell.animal == null)) {
+    transform({ animal: 'fish' })
+  } else if (cell.animal === 'fish' && countAnimals('fish') < 2) {
+    transform({ animal: null })
+  } else if ((cell.animal === 'shark' && countAnimals('shark') !== 2 && countAnimals('fish') === 0) || countAnimals('fish') === 0) {
+    transform({ animal: null })
   }
 }
 
@@ -132,7 +118,7 @@ export const PLANTS:{[id:string]:Plant} = {
 export const ANIMALS:{[id:string]:Animal} = {
   fish: {
     spawn: (cell:Cell) => {
-      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 2 //&& countAnimals('shark') === 0
+      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 2 // && countAnimals('shark') === 0
     },
     die: (cell:Cell) => {
       const fishCount = countAnimals('fish')
