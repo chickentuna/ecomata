@@ -1,4 +1,4 @@
-import { oddqOffsetNeighbor } from './hex'
+import { oddqOffsetNeighbor, offsetDistance } from './hex'
 import { CellTicker } from './CellTicker'
 import { Point } from './utils'
 
@@ -49,7 +49,17 @@ export class World {
       if ((cell.y === 0 && cell.x === 0) || (cell.y === this.height - 1 && cell.x === this.width - 1)) {
         continue
       }
-      cell.type = 'ocean'
+
+      const distToCenter = offsetDistance({ x: this.width / 2, y: this.height / 2 }, cell)
+      if (distToCenter <= 0) {
+        cell.type = 'rock'
+      } else if (distToCenter <= 2) {
+        cell.type = 'earth'
+      } else if (distToCenter <= 3) {
+        cell.type = 'sand'
+      } else {
+        cell.type = 'ocean'
+      }
     }
   }
 

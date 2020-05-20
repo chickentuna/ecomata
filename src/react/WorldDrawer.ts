@@ -76,7 +76,7 @@ export class WorldDrawer {
     const g = hex.ground
     g.clear()
     g.beginFill(colour, 1)
-    g.lineStyle(1, 0x0, 1, 0)
+    // g.lineStyle(1, 0x0, 1, 0)
     g.drawPolygon([
       -HEXAGON_RADIUS, 0,
       -HEXAGON_RADIUS / 2, HEXAGON_HEIGHT / 2,

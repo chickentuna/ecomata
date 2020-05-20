@@ -36,3 +36,26 @@ export function oddqOffsetNeighbor (x:number, y:number, direction:number) {
   var dir = oddqDirections[parity][direction]
   return { x: x + dir[0], y: y + dir[1] }
 }
+
+interface CubePoint {
+  x:number
+  y: number
+  z: number
+}
+
+function oddqToCube (hex:Point):CubePoint {
+  var x = hex.x
+  var z = hex.y - (hex.x - (hex.x & 1)) / 2
+  var y = -x - z
+  return { x, y, z }
+}
+
+function cubeDistance (a:CubePoint, b:CubePoint) : number {
+  return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2
+}
+
+export function offsetDistance (a:Point, b:Point):number {
+  var ac = oddqToCube(a)
+  var bc = oddqToCube(b)
+  return cubeDistance(ac, bc)
+}

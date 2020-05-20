@@ -4,8 +4,9 @@ import * as PIXI from 'pixi.js'
 import { World } from './World'
 import { TooltipHandler } from './tooltip'
 import { WorldDrawer } from './WorldDrawer'
-import { ANIMALS } from './emoji'
+import { ANIMALS as labels } from './emoji'
 import { screenToHex } from './hex'
+import { ANIMALS } from './CellTicker'
 
 const DEFAULT_MS_PER_TICK = 100
 
@@ -150,8 +151,13 @@ class App extends Component<Props, State> {
               <input type='number' value={this.state.msPerTick} step='10' onChange={(ev) => this.handleMsChange(ev.target.value)} />
             </label>
             <select value={this.state.animal} onChange={ev => this.handleAnimalChange(ev.target.value)}>
-              <option label={`${ANIMALS.fish} fish`} value='fish' />
-              <option label={`${ANIMALS.shark} shark`} value='shark' />
+              {/* <option label={`${labels.fish} fish`} value='fish' /> */}
+              {/* <option label={`${labels.shark} shark`} value='shark' /> */}
+              {Object.entries(ANIMALS).map(([id, animal]) => {
+                return (
+                  <option key={id} label={`${labels[id]} ${id}`} value={id} />
+                )
+              })}
             </select>
             <button onClick={() => this.tick()}>
               tick

@@ -50,22 +50,52 @@ export function applyHumidity (cell:Cell, transform: TransformCollector) {
 }
 
 function apply (cell:Cell, transform:TransformCollector) {
-  if (countAnimals('shark') === 2 && (cell.animal === 'fish' || cell.animal == null) && countAnimals('fish') > 0) {
-    transform({ animal: 'shark' })
-  } else if (countAnimals('fish') === 2 && (cell.animal == null)) {
-    transform({ animal: 'fish' })
-  } else if (cell.animal === 'fish' && countAnimals('fish') < 2) {
-    transform({ animal: null })
-  } else if ((cell.animal === 'shark' && countAnimals('shark') !== 2 && countAnimals('fish') === 0) || countAnimals('fish') === 0) {
-    transform({ animal: null })
+  let spawned = false
+  Object.entries(ANIMALS).forEach(([id, animal]) => {
+    const mates = countAnimals(id)
+    const onPrey = animal.prey?.includes(cell.animal)
+    const onEmpty = cell.animal == null
+    const preyCount = animal.prey && count(c => animal.prey.includes(c.animal))
+    const onHabitat = typeof animal.habitat === 'string' ? cell.type === animal.habitat : animal.habitat.includes(cell.type)
+
+    if (mates === 2 && (onPrey || (onEmpty && onHabitat)) && ((preyCount == null) || (preyCount > 0))) {
+      transform({ animal: id })
+      spawned = true
+    }
+  })
+
+  if (!spawned && cell.animal != null) {
+    const animal = ANIMALS[cell.animal]
+    const mates = countAnimals(cell.animal)
+    const preyCount = animal.prey && count(c => animal.prey.includes(c.animal))
+
+    if (preyCount != null && preyCount === 0) {
+      transform({ animal: null })
+    } else if (preyCount == null && mates < 2) {
+      const predators = Object.entries(ANIMALS)
+        .filter(([id, predator]) => predator.prey?.includes(cell.animal))
+        .map(([id, predator]) => id)
+      const predatorCount = count(c => predators.includes(c.animal))
+      if (predatorCount > 0) {
+        transform({ animal: null })
+      } else {
+        const onHabitat = typeof animal.habitat === 'string' ? cell.type === animal.habitat : animal.habitat.includes(cell.type)
+        if (!onHabitat) {
+          transform({ animal: null })
+        }
+      }
+    } else {
+      const onHabitat = typeof animal.habitat === 'string' ? cell.type === animal.habitat : animal.habitat.includes(cell.type)
+      if (!onHabitat) {
+        transform({ animal: null })
+      }
+    }
   }
 }
 
 interface Animal {
-  spawn: (cell:Cell) => boolean
-  die: (cell:Cell) => boolean
-  predators?: string[]
-  prey?:string[] // Not necassarily equal to the concerned animals' predators
+  prey?:string[],
+  habitat: string|string[]
 }
 
 interface Contents {
@@ -102,28 +132,27 @@ export const PLANTS:{[id:string]:Plant} = {
 
 export const ANIMALS:{[id:string]:Animal} = {
   fish: {
-    spawn: (cell:Cell) => {
-      return cell.animal == null && cell.type === 'ocean' && countAnimals('fish') === 2 // && countAnimals('shark') === 0
-    },
-    die: (cell:Cell) => {
-      const fishCount = countAnimals('fish')
-      return fishCount <= 1 || countAnimals('shark') > 0
-    }
-
+    habitat: 'ocean'
   },
   shark: {
-    spawn: (cell:Cell) => {
-      const preyCount = countAnimals('fish')
-
-      return (
-        preyCount > 0 && (cell.animal == null || cell.animal === 'fish') && cell.type === 'ocean' && countAnimals('shark') === 2
-      )
-    },
-    die: (cell:Cell) => {
-      const shark = countAnimals('shark')
-      return (shark <= 1 || shark >= 3) && countAnimals('fish') === 0
-    }
+    habitat: 'ocean',
+    prey: ['fish']
+  },
+  crab: {
+    habitat: 'sand'
+  },
+  octopus: {
+    habitat: 'ocean',
+    prey: ['crab']
+  },
+  bird: {
+    habitat: ['rock', 'earth'],
+    prey: ['crab', 'bug']
+  },
+  bug: {
+    habitat: 'earth'
   }
+
 }
 
 export class CellTicker {
