@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/ecomata/build/static/css/main.66de3ae3.chunk.css",
+    "main.js": "/ecomata/build/static/js/main.7f7e5d0e.chunk.js",
+    "main.js.map": "/ecomata/build/static/js/main.7f7e5d0e.chunk.js.map",
+    "runtime-main.js": "/ecomata/build/static/js/runtime-main.469de872.js",
+    "runtime-main.js.map": "/ecomata/build/static/js/runtime-main.469de872.js.map",
+    "static/js/2.438c5f9d.chunk.js": "/ecomata/build/static/js/2.438c5f9d.chunk.js",
+    "static/js/2.438c5f9d.chunk.js.map": "/ecomata/build/static/js/2.438c5f9d.chunk.js.map",
+    "index.html": "/ecomata/build/index.html",
+    "precache-manifest.a14e66a1641f5aef86986834fa00b3ca.js": "/ecomata/build/precache-manifest.a14e66a1641f5aef86986834fa00b3ca.js",
+    "service-worker.js": "/ecomata/build/service-worker.js",
+    "static/css/main.66de3ae3.chunk.css.map": "/ecomata/build/static/css/main.66de3ae3.chunk.css.map",
+    "static/js/2.438c5f9d.chunk.js.LICENSE.txt": "/ecomata/build/static/js/2.438c5f9d.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.469de872.js",
+    "static/js/2.438c5f9d.chunk.js",
+    "static/css/main.66de3ae3.chunk.css",
+    "static/js/main.7f7e5d0e.chunk.js"
+  ]
+}
